@@ -1,53 +1,152 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Move JSON Blobs (Case-Insensitive, Unique)</title>
+    <title>Move Blobs</title>
+    <style>
+      /* General styles */
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+
+      /* Sidebar styles */
+      .sidebar {
+        position: fixed;
+        top: 0;
+        right: -250px;
+        width: 250px;
+        height: 100%;
+        background-color: #333;
+        color: #fff;
+        overflow-x: hidden;
+        transition: right 0.3s;
+      }
+
+      .sidebar.open {
+        right: 0;
+      }
+
+      .sidebar p {
+        margin-top: 20px;
+        margin-left: 20px;
+        color: #ddd;
+      }
+
+      .sidebar ul {
+        padding: 0;
+        list-style: none;
+      }
+
+      .sidebar ul li {
+        padding: 10px;
+        text-align: right;
+      }
+
+      /* Sidebar close button */
+      #closeSidebarButton {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 24px;
+        cursor: pointer;
+      }
+
+      /* Page Content styles */
+      .page-content {
+        margin-right: 0;
+        transition: margin-right 0.3s;
+      }
+
+      .header {
+        background-color: #009688;
+        color: #fff;
+        padding: 15px;
+      }
+
+      .main-content {
+        padding: 20px;
+      }
+
+      /* Sidebar open button */
+      #sidebarButtonId {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 24px;
+        cursor: pointer;
+      }
+
+      /* Input field */
+      #searchInput {
+        padding: 10px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* Lists */
+      .lists {
+        display: flex;
+      }
+
+      .list {
+        flex: 1;
+        padding: 20px;
+      }
+
+      .list ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .list ul li {
+        margin-bottom: 10px;
+      }
+    </style>
   </head>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
   <body>
     <!-- Sidebar -->
-    <div
-      class="w3-sidebar w3-bar-block w3-border-right"
-      style="display: none"
-      id="mySidebar"
-    >
-      <button id="closeSidebarButton" class="w3-bar-item w3-large">
-        Close &times;
-      </button>
+    <div class="sidebar" id="mySidebar">
+      <button id="closeSidebarButton">&times;</button>
       <p>Successfully Guessed:</p>
       <ul class="right-column" id="newList"></ul>
     </div>
 
     <!-- Page Content -->
-    <div class="w3-teal">
-      <button id="openSidebarButton" class="w3-button w3-teal w3-xlarge">
-        ☰
-      </button>
-      <div class="w3-container">
+    <div class="page-content">
+      <div class="header">
+        <button id="sidebarButtonId">&#9776;</button>
         <h1>Main Content</h1>
         <input type="text" id="searchInput" placeholder="Enter text here" />
       </div>
-    </div>
-    
-    <div class="w3-container">
-      <p>Original List:</p>
-      <ul id="originalList"></ul>
+      <div class="main-content">
+        <div class="list">
+          <p>Original List:</p>
+          <ul id="originalList"></ul>
+        </div>
+      </div>
     </div>
 
     <script type="module">
       import { stationsInfo } from "./stationsInfo.js";
 
-      const openSidebarButton = document.getElementById("openSidebarButton");
+      const sidebarButton = document.getElementById("sidebarButtonId");
 
-      openSidebarButton.addEventListener("click", function () {
-        document.getElementById("mySidebar").style.display = "block";
-      });
+      sidebarButton.addEventListener("click", function () {
+        const sidebar = document.getElementById("mySidebar");
 
-      const closeSidebarButton = document.getElementById("closeSidebarButton");
-
-      closeSidebarButton.addEventListener("click", function () {
-        document.getElementById("mySidebar").style.display = "none";
+        if (sidebar.classList.contains("open")) {
+          console.log("Closing sidebar");
+          sidebar.classList.remove("open");
+        } else {
+          console.log("Opening sidebar");
+          sidebar.classList.add("open");
+        }
       });
 
       // Function to initialize and display lists
