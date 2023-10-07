@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>London Tube Challenge</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+      #guessInput {
+        position: absolute;
+        top: 10px; /* Adjust top position as needed */
+        left: 10px; /* Adjust left position as needed */
+        z-index: 1; /* Ensure the input is above the map */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <!-- Create a text input -->
+    <input type="text" id="guessInput" placeholder="Enter text here" />
+    <script type="module">
+      import { ACCESS_TOKEN, STYLE_URI } from "./consts.js";
+      import { stationsInfo } from "./stationsInfo.js";
+
+      // Empty list to store moved JSON blobs
+      let correctGuessesList = [];
+
+      // Function to move JSON blobs based on user input (case-insensitive, unique)
+      function moveBlobs() {
+        // Get the user's input from the text box and convert to lowercase
+        const guessInput = document
+          .getElementById("guessInput")
+          .value.toLowerCase();
+
+        // Iterate through the original list
+        for (const blob of stationsInfo) {
+          // Convert the name to lowercase for case-insensitive comparison
+          const itemName = blob.properties.name.toLowerCase();
+
+          if (
+            itemName === guessInput &&
+            !correctGuessesList.some(
+              (item) => item.properties.name.toLowerCase() === itemName
+            )
+          ) {
+            // Move the blob to the new list
+            correctGuessesList.push(blob);
+
+            // Clear the text field
+            const textField = document.getElementById("guessInput");
+            textField.value = "";
+
+            // Update the points data with the new guess
+            map.getSource("points").setData({
+              type: "FeatureCollection",
+              features: correctGuessesList,
+            });
+          }
+        }
+      }
+
+      mapboxgl.accessToken = ACCESS_TOKEN;
+      const map = new mapboxgl.Map({
+        container: "map", // container ID
+        // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+        style: "mapbox://styles/" + STYLE_URI, // style URL, darkmode
+        center: [-0.1304, 51.5164], // starting position [lng, lat]
+        zoom: 12, // starting zoom
+      });
+
+      map.on("load", () => {
+        map.addSource("points", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: correctGuessesList,
+          },
+        });
+
+        // Add an image to use as a custom marker
+        map.loadImage(
+          "https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png",
+          (error, image) => {
+            if (error) throw error;
+            map.addImage("custom-marker", image);
+
+            // Add a symbol layer
+            map.addLayer({
+              id: "points",
+              type: "symbol",
+              source: "points",
+              layout: {
+                "icon-image": "custom-marker",
+                "icon-size": 0.75,
+                // get the station name from the source's 'name' property
+                "text-anchor": "top",
+                "text-field": ["get", "name"],
+                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+                "text-offset": [0, 1.25],
+                "text-optional": true,
+                "text-size": 10,
+              },
+              paint: {
+                "text-color": "#FFFFFF",
+              },
+            });
+          }
+        );
+      });
+
+      map.on("idle", () => {
+        const textbox = document.getElementById("guessInput");
+        textbox.addEventListener("input", function () {
+          moveBlobs();
+        });
+      });
+    </script>
+  </body>
+</html>

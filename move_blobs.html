@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Move JSON Blobs (Case-Insensitive, Unique)</title>
+  </head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
+  <body>
+    <!-- Sidebar -->
+    <div
+      class="w3-sidebar w3-bar-block w3-border-right"
+      style="display: none"
+      id="mySidebar"
+    >
+      <button id="closeSidebarButton" class="w3-bar-item w3-large">
+        Close &times;
+      </button>
+      <p>Successfully Guessed:</p>
+      <ul class="right-column" id="newList"></ul>
+    </div>
+
+    <!-- Page Content -->
+    <div class="w3-teal">
+      <button id="openSidebarButton" class="w3-button w3-teal w3-xlarge">
+        ☰
+      </button>
+      <div class="w3-container">
+        <h1>Main Content</h1>
+        <input type="text" id="searchInput" placeholder="Enter text here" />
+      </div>
+    </div>
+    
+    <div class="w3-container">
+      <p>Original List:</p>
+      <ul id="originalList"></ul>
+    </div>
+
+    <script type="module">
+      import { stationsInfo } from "./stationsInfo.js";
+
+      const openSidebarButton = document.getElementById("openSidebarButton");
+
+      openSidebarButton.addEventListener("click", function () {
+        document.getElementById("mySidebar").style.display = "block";
+      });
+
+      const closeSidebarButton = document.getElementById("closeSidebarButton");
+
+      closeSidebarButton.addEventListener("click", function () {
+        document.getElementById("mySidebar").style.display = "none";
+      });
+
+      // Function to initialize and display lists
+      function initializeLists() {
+        // Clear both lists
+        document.getElementById("originalList").innerHTML = "";
+        document.getElementById("newList").innerHTML = "";
+
+        // Display the original list
+        for (const blob of stationsInfo) {
+          const listItem = document.createElement("li");
+          listItem.textContent = blob.properties.name;
+          document.getElementById("originalList").appendChild(listItem);
+        }
+      }
+
+      // Empty list to store moved JSON blobs
+      let newList = [];
+
+      const searchInputItem = document.getElementById("searchInput");
+
+      // Function to move JSON blobs based on user input (case-insensitive, unique)
+      function moveBlobs() {
+        // Get the user's input from the text box and convert to lowercase
+        const searchInput = searchInputItem.value.toLowerCase();
+
+        // Clear the new list and original list
+        document.getElementById("newList").innerHTML = "";
+        document.getElementById("originalList").innerHTML = "";
+
+        // Iterate through the original list
+        for (const blob of stationsInfo) {
+          // Convert the name to lowercase for case-insensitive comparison
+          const itemName = blob.properties.name.toLowerCase();
+
+          if (
+            itemName === searchInput &&
+            !newList.some(
+              (item) => item.properties.name.toLowerCase() === itemName
+            )
+          ) {
+            // Move the blob to the new list
+            newList.push(blob);
+            const textField = document.getElementById("searchInput");
+            textField.value = "";
+          }
+        }
+
+        // Display the updated lists
+        for (const blob of stationsInfo) {
+          const listItem = document.createElement("li");
+          listItem.textContent = blob.properties.name;
+          if (newList.includes(blob)) {
+            document.getElementById("newList").appendChild(listItem);
+          } else {
+            document.getElementById("originalList").appendChild(listItem);
+          }
+        }
+      }
+
+      searchInputItem.addEventListener("input", function () {
+        moveBlobs();
+      });
+
+      // Initialize lists on page load
+      window.onload = initializeLists;
+    </script>
+  </body>
+</html>
