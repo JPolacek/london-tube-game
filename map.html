@@ -13,28 +13,134 @@
     />
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
     <style>
+      /* General styles */
       body {
         margin: 0;
+        font-family: Arial, sans-serif;
+      }
+
+      /* Sidebar styles */
+      .sidebar {
+        position: fixed;
+        z-index: 2;
+        top: 0;
+        right: -250px;
+        width: 250px;
+        height: 100%;
+        background-color: #4e4e4e;
+        color: #fff;
+        overflow-x: hidden;
+        transition: right 0.3s;
+        box-shadow: 0 0 10px rgba(0, -1, 0, 0.75); /* Add a drop shadow */
+        text-align: center;
+      }
+
+      .sidebar.open {
+        right: 0;
+      }
+
+      .sidebar p {
+        margin-top: 20px;
+        margin-left: 20px;
+        color: #ddd;
+      }
+
+      .sidebar ul {
+        padding: 0;
+        list-style: none;
+      }
+
+      .sidebar ul li {
+        padding: 10px;
+      }
+
+      /* Page Content styles */
+      .page-content {
+        margin-right: 0;
+        transition: margin-right 0.4s;
+      }
+
+      .header {
+        display: flex;
+        flex-direction: row; /* Change flex-direction to row */
+        align-items: center; /* Vertically center the content */
+        background-color: #4e4e4e;
+        color: #fff;
+        padding: 10px;
+        position: relative;
+        z-index: 1; /* Ensure the header is above the map */
+      }
+
+      .header button {
+        background-color: transparent;
+        border: none;
+        color: #fff;
+        font-size: 24px;
+        margin-right: 10px; /* Add some spacing to the right of the button */
+        cursor: pointer;
+        padding: 5px;
+      }
+
+      .header input {
+        flex: 1; /* Make the input expand and take up remaining horizontal space */
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        /* margin-left: 10px; */
+        box-sizing: border-box;
+      }
+
+      .main-content {
+        padding: 20px;
+      }
+
+      /* Lists */
+      .lists {
+        display: flex;
+      }
+
+      .list {
+        flex: 1;
+        padding: 20px;
+      }
+
+      .list ul {
+        list-style: none;
         padding: 0;
       }
+
+      .list ul li {
+        margin-bottom: 10px;
+      }
+
       #map {
         position: absolute;
         top: 0;
         bottom: 0;
         width: 100%;
-      }
-      #guessInput {
-        position: absolute;
-        top: 10px; /* Adjust top position as needed */
-        left: 10px; /* Adjust left position as needed */
-        z-index: 1; /* Ensure the input is above the map */
+        z-index: 0;
       }
     </style>
   </head>
   <body>
-    <div id="map"></div>
-    <!-- Create a text input -->
-    <input type="text" id="guessInput" placeholder="Enter text here" />
+    <!-- Sidebar -->
+    <div class="sidebar" id="mySidebar">
+      <p>
+        <b>Successful Guesses: </b>
+        <span id="guessCount">0</span>/<span id="totalStationsCount"></span>
+      </p>
+      <ul class="right-column" id="correctGuessesList"></ul>
+    </div>
+
+    <!-- Page Content -->
+    <div class="page-content">
+      <div id="map" classs="main-content"></div>
+      <div class="header">
+        <button id="sidebarButtonId">&#9776;</button>
+        <input type="text" id="guessInput" placeholder="Enter text here" />
+      </div>
+    </div>
+
     <script type="module">
       import { ACCESS_TOKEN, STYLE_URI } from "./consts.js";
       import { stationsInfo } from "./stationsInfo.js";
@@ -67,11 +173,28 @@
             const textField = document.getElementById("guessInput");
             textField.value = "";
 
+            // Update the guess count and display it
+            const guessCount = document.getElementById("guessCount");
+            guessCount.textContent = correctGuessesList.length;
+
             // Update the points data with the new guess
             map.getSource("points").setData({
               type: "FeatureCollection",
               features: correctGuessesList,
             });
+            
+            // Display the updated list of correct guesses
+            document.getElementById("correctGuessesList").innerHTML = "";
+            for (const blob of stationsInfo) {
+              const listItem = document.createElement("li");
+              listItem.textContent = blob.properties.name;
+              if (correctGuessesList.includes(blob)) {
+                console.log("Adding", blob.properties.name);
+                document
+                  .getElementById("correctGuessesList")
+                  .appendChild(listItem);
+              }
+            }
           }
         }
       }
@@ -84,6 +207,19 @@
         center: [-0.1304, 51.5164], // starting position [lng, lat]
         zoom: 12, // starting zoom
       });
+
+      const sidebarButton = document.getElementById("sidebarButtonId");
+
+      sidebarButton.addEventListener("click", function () {
+        const sidebar = document.getElementById("mySidebar");
+
+        sidebar.classList.contains("open")
+          ? sidebar.classList.remove("open")
+          : sidebar.classList.add("open");
+      });
+
+      document.getElementById("totalStationsCount").textContent =
+        stationsInfo.length;
 
       map.on("load", () => {
         map.addSource("points", {

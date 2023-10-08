@@ -16,10 +16,12 @@
         right: -250px;
         width: 250px;
         height: 100%;
-        background-color: #333;
+        background-color: #4e4e4e;
         color: #fff;
         overflow-x: hidden;
         transition: right 0.3s;
+        box-shadow: 0 0 10px rgba(0, -1, 0, 0.75); /* Add a drop shadow */
+        text-align: center;
       }
 
       .sidebar.open {
@@ -39,54 +41,44 @@
 
       .sidebar ul li {
         padding: 10px;
-        text-align: right;
-      }
-
-      /* Sidebar close button */
-      #closeSidebarButton {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: transparent;
-        border: none;
-        color: #fff;
-        font-size: 24px;
-        cursor: pointer;
       }
 
       /* Page Content styles */
       .page-content {
         margin-right: 0;
-        transition: margin-right 0.3s;
+        transition: margin-right 0.4s;
       }
 
       .header {
-        background-color: #009688;
+        display: flex;
+        flex-direction: row; /* Change flex-direction to row */
+        align-items: center; /* Vertically center the content */
+        background-color: #4e4e4e;
         color: #fff;
-        padding: 15px;
+        padding: 10px;
+      }
+
+      .header button {
+        background-color: transparent;
+        border: none;
+        color: #fff;
+        font-size: 24px;
+        margin-right: 10px; /* Add some spacing to the right of the button */
+        cursor: pointer;
+        padding: 5px;
+      }
+
+      .header input {
+        flex: 1; /* Make the input expand and take up remaining horizontal space */
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        /* margin-left: 10px; */
+        box-sizing: border-box;
       }
 
       .main-content {
         padding: 20px;
-      }
-
-      /* Sidebar open button */
-      #sidebarButtonId {
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        background: transparent;
-        border: none;
-        color: #fff;
-        font-size: 24px;
-        cursor: pointer;
-      }
-
-      /* Input field */
-      #searchInput {
-        padding: 10px;
-        width: 100%;
-        box-sizing: border-box;
       }
 
       /* Lists */
@@ -112,8 +104,7 @@
   <body>
     <!-- Sidebar -->
     <div class="sidebar" id="mySidebar">
-      <button id="closeSidebarButton">&times;</button>
-      <p>Successfully Guessed:</p>
+      <p><b>Successful Guesses: </b><span id="guessCount">0</span>/<span id="totalStationsCount"></span></p>
       <ul class="right-column" id="newList"></ul>
     </div>
 
@@ -121,7 +112,6 @@
     <div class="page-content">
       <div class="header">
         <button id="sidebarButtonId">&#9776;</button>
-        <h1>Main Content</h1>
         <input type="text" id="searchInput" placeholder="Enter text here" />
       </div>
       <div class="main-content">
@@ -140,13 +130,9 @@
       sidebarButton.addEventListener("click", function () {
         const sidebar = document.getElementById("mySidebar");
 
-        if (sidebar.classList.contains("open")) {
-          console.log("Closing sidebar");
-          sidebar.classList.remove("open");
-        } else {
-          console.log("Opening sidebar");
-          sidebar.classList.add("open");
-        }
+        sidebar.classList.contains("open")
+          ? sidebar.classList.remove("open")
+          : sidebar.classList.add("open");
       });
 
       // Function to initialize and display lists
@@ -154,6 +140,7 @@
         // Clear both lists
         document.getElementById("originalList").innerHTML = "";
         document.getElementById("newList").innerHTML = "";
+        document.getElementById("totalStationsCount").textContent = stationsInfo.length;
 
         // Display the original list
         for (const blob of stationsInfo) {
@@ -192,6 +179,10 @@
             newList.push(blob);
             const textField = document.getElementById("searchInput");
             textField.value = "";
+
+            // Update the guess count and display it
+            const guessCount = document.getElementById("guessCount");
+            guessCount.textContent = newList.length;
           }
         }
 
