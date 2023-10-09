@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>London Tube Challenge</title>
+    <link rel="icon" type="image/x-icon" href="assets/london-tube-train.jpg" />
     <meta
       name="viewport"
       content="initial-scale=1,maximum-scale=1,user-scalable=no"
@@ -12,11 +13,21 @@
       rel="stylesheet"
     />
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cabin:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
     <style>
       /* General styles */
       body {
         margin: 0;
-        font-family: Arial, sans-serif;
+        font-family: "Cabin", sans-serif;
       }
 
       /* Sidebar styles */
@@ -40,9 +51,12 @@
       }
 
       .sidebar p {
+        font-size: 20px;
+        font-weight: bolder;
         margin-top: 20px;
         margin-left: 20px;
-        color: #ddd;
+        color: #dddbd4;
+        padding: 5px;
       }
 
       .sidebar ul {
@@ -86,7 +100,7 @@
         padding: 10px;
         border: none;
         border-radius: 5px;
-        /* margin-left: 10px; */
+        margin-right: 5px;
         box-sizing: border-box;
       }
 
@@ -120,6 +134,41 @@
         width: 100%;
         z-index: 0;
       }
+
+      .message-box {
+        position: fixed;
+        bottom: 25px;
+        right: 5px;
+        display: flex;
+        align-items: center;
+        color: #fff;
+        border-radius: 4px;
+        padding: 8px;
+        cursor: pointer;
+        transition: opacity .7s ease-in-out;
+        background-color: rgb(78, 78, 78, 0.25);
+        opacity: 0.25; /* Set initial opacity */
+      }
+      
+      .message-icon {
+        font-size: 20px;
+        /* opacity: 25%; */
+      }
+      
+      .message-content {
+        display: none;
+      }
+      
+      .message-box:hover {
+        background-color: rgb(78, 78, 78, 1);
+        opacity: 1; /* Set initial opacity */
+        transition: opacity .7s ease-in-out; /* Apply transition to width, height, and opacity */
+      }
+
+      .message-box:hover .message-content {
+        margin-left: 5px;
+        display: block;
+      }
     </style>
   </head>
   <body>
@@ -137,7 +186,15 @@
       <div id="map" classs="main-content"></div>
       <div class="header">
         <button id="sidebarButtonId">&#9776;</button>
-        <input type="text" id="guessInput" placeholder="Enter text here" />
+        <input type="text" id="guessInput" placeholder="Guess a station..." />
+      </div>
+    </div>
+
+    <div class="message-box">
+      <i class="fas fa-info-circle message-icon"></i>
+      <div class="message-content">
+        This site is not affiliated in anyway with Transport for London (TfL) or
+        the London Underground.
       </div>
     </div>
 
@@ -182,7 +239,7 @@
               type: "FeatureCollection",
               features: correctGuessesList,
             });
-            
+
             // Display the updated list of correct guesses
             document.getElementById("correctGuessesList").innerHTML = "";
             for (const blob of stationsInfo) {
