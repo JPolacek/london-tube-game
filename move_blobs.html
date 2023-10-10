@@ -130,7 +130,7 @@
       .message-icon {
         font-size: 20px;
       }
-      
+
       .message-content {
         display: none;
       }
@@ -208,6 +208,25 @@
 
       const searchInputItem = document.getElementById("searchInput");
 
+      function roughlyEqual(itemName, searchInput) {
+        function adjust(s) {
+          return s
+            .replace(/[^\w\s\&]/g, "")
+            .replace("saint", "st")
+            .replace(/\band\b/g, "\&")
+            .toLowerCase();
+        }
+
+        const adjustedSearchInput = adjust(searchInput);
+
+        return adjust(itemName) === adjustedSearchInput &&
+          !newList.some(
+            (item) => adjust(item.properties.name) === adjustedSearchInput
+          )
+          ? true
+          : false;
+      }
+
       // Function to move JSON blobs based on user input (case-insensitive, unique)
       function moveBlobs() {
         // Get the user's input from the text box and convert to lowercase
@@ -219,15 +238,7 @@
 
         // Iterate through the original list
         for (const blob of stationsInfo) {
-          // Convert the name to lowercase for case-insensitive comparison
-          const itemName = blob.properties.name.toLowerCase();
-
-          if (
-            itemName === searchInput &&
-            !newList.some(
-              (item) => item.properties.name.toLowerCase() === itemName
-            )
-          ) {
+          if (roughlyEqual(blob.properties.name, searchInput)) {
             // Move the blob to the new list
             newList.push(blob);
             const textField = document.getElementById("searchInput");
@@ -252,6 +263,15 @@
       }
 
       searchInputItem.addEventListener("input", function () {
+        // Get the current input value
+        let inputText = this.value;
+
+        // Replace consecutive spaces with a single space
+        inputText = inputText.replace(/\s+/g, " ");
+
+        // Update the input value with the cleaned text
+        this.value = inputText;
+
         moveBlobs();
       });
 

@@ -145,24 +145,24 @@
         border-radius: 4px;
         padding: 8px;
         cursor: pointer;
-        transition: opacity .7s ease-in-out;
+        transition: opacity 0.7s ease-in-out;
         background-color: rgb(78, 78, 78, 0.25);
         opacity: 0.25; /* Set initial opacity */
       }
-      
+
       .message-icon {
         font-size: 20px;
         /* opacity: 25%; */
       }
-      
+
       .message-content {
         display: none;
       }
-      
+
       .message-box:hover {
         background-color: rgb(78, 78, 78, 1);
         opacity: 1; /* Set initial opacity */
-        transition: opacity .7s ease-in-out; /* Apply transition to width, height, and opacity */
+        transition: opacity 0.7s ease-in-out; /* Apply transition to width, height, and opacity */
       }
 
       .message-box:hover .message-content {
@@ -205,6 +205,25 @@
       // Empty list to store moved JSON blobs
       let correctGuessesList = [];
 
+      function adjust(s) {
+        return s
+          .replace(/[^\w\s\&]/g, "")
+          .replace("saint", "st")
+          .replace(/\band\b/g, "\&")
+          .toLowerCase();
+      }
+
+      function roughlyEqual(itemName, searchInput) {
+        const adjustedSearchInput = adjust(searchInput);
+
+        return adjust(itemName) === adjustedSearchInput &&
+          !correctGuessesList.some(
+            (item) => adjust(item.properties.name) === adjustedSearchInput
+          )
+          ? true
+          : false;
+      }
+
       // Function to move JSON blobs based on user input (case-insensitive, unique)
       function moveBlobs() {
         // Get the user's input from the text box and convert to lowercase
@@ -217,12 +236,7 @@
           // Convert the name to lowercase for case-insensitive comparison
           const itemName = blob.properties.name.toLowerCase();
 
-          if (
-            itemName === guessInput &&
-            !correctGuessesList.some(
-              (item) => item.properties.name.toLowerCase() === itemName
-            )
-          ) {
+          if (roughlyEqual(itemName, guessInput)) {
             // Move the blob to the new list
             correctGuessesList.push(blob);
 
@@ -321,6 +335,15 @@
       map.on("idle", () => {
         const textbox = document.getElementById("guessInput");
         textbox.addEventListener("input", function () {
+          // Get the current input value
+          let inputText = this.value;
+
+          // Replace consecutive spaces with a single space
+          inputText = inputText.replace(/\s+/g, " ");
+
+          // Update the input value with the cleaned text
+          this.value = inputText;
+
           moveBlobs();
         });
       });
