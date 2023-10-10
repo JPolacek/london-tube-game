@@ -32,6 +32,8 @@
 
       /* Sidebar styles */
       .sidebar {
+        display: flex;
+        flex-direction: column;
         position: fixed;
         z-index: 2;
         top: 0;
@@ -42,7 +44,7 @@
         color: #fff;
         overflow-x: hidden;
         transition: right 0.3s;
-        box-shadow: 0 0 10px rgba(0, -1, 0, 0.75); /* Add a drop shadow */
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.75);
         text-align: center;
       }
 
@@ -50,11 +52,30 @@
         right: 0;
       }
 
-      .sidebar p {
+      /* Make the first paragraph stay at the top */
+      .sidebar > p:first-child {
         font-size: 20px;
         font-weight: bolder;
         margin-top: 20px;
+        margin-bottom: 0px;
         margin-left: 20px;
+        margin-right: 20px;
+        color: #dddbd4;
+        padding: 5px;
+      }
+
+      /* Make the right-column list scrollable */
+      .right-column {
+        flex-grow: 1; /* Allow the list to grow and take available space */
+        overflow-y: auto; /* Add vertical scrollbar if needed */
+      }
+
+      /* Make the "Help Point" stay at the bottom */
+      .help-point {
+        margin-top: auto; /* Push the element to the bottom */
+        margin-left: 20px;
+        margin-right: 20px;
+        margin-bottom: 20px;
         color: #dddbd4;
         padding: 5px;
       }
@@ -179,6 +200,7 @@
         <span id="guessCount">0</span>/<span id="totalStationsCount"></span>
       </p>
       <ul class="right-column" id="correctGuessesList"></ul>
+      <p class="help-point">Help Point</p>
     </div>
 
     <!-- Page Content -->
