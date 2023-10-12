@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .right-column {
+        position: relative;
+        width: 200px;
+        height: 400px;
+        background-color: blue;
+      }
+
+      .top-container {
+        position: relative;
+        width: 200px;
+        height: 100px;
+        background-image: linear-gradient(
+          0deg,
+          hsla(0, 0%, 100%, 0) 13.94%,
+          #4e4e4e 100%
+        );
+        z-index: 1;
+        display: flex;
+        align-items: flex-start;
+        color: white; /* Set text color to white */
+      }
+
+      .bottom-container {
+        position: relative;
+        width: 200px;
+        height: 100px;
+        background-image: linear-gradient(
+          180deg,
+          hsla(0, 0%, 100%, 0) 13.94%,
+          #4e4e4e 98.73%
+        );
+        z-index: 1;
+        display: flex;
+        align-items: flex-end;
+        color: white; /* Set text color to white */
+      }
+
+      /* Center the text in both elements */
+      .top-container p,
+      .bottom-container p {
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="right-column"></div>
+    <div class="top-container"><p>successful guesses 0/0</p></div>
+    <div class="bottom-container"><p>help point</p></div>
+    <script>
+      // Calculate and set the top values for bottom-container and top-container
+      const rightColumnHeight = document.querySelector(".right-column").clientHeight;
+      const topContainer = document.querySelector(".top-container");
+      const bottomContainer = document.querySelector(".bottom-container");
+
+      topContainer.style.top = `-${rightColumnHeight}px`;
+      bottomContainer.style.top = `-${
+        rightColumnHeight -
+        topContainer.clientHeight -
+        bottomContainer.clientHeight
+      }px`;
+    </script>
+  </body>
+</html>
