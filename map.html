@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xml:lang>
   <head>
     <meta charset="utf-8" />
     <title>London Tube Challenge</title>
@@ -32,8 +32,6 @@
 
       /* Sidebar styles */
       .sidebar {
-        display: flex;
-        flex-direction: column;
         position: fixed;
         z-index: 2;
         top: 0;
@@ -42,7 +40,6 @@
         height: 100%;
         background-color: #4e4e4e;
         color: #fff;
-        overflow-x: hidden;
         transition: right 0.3s;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.75);
         text-align: center;
@@ -52,41 +49,69 @@
         right: 0;
       }
 
-      /* Make the first paragraph stay at the top */
-      .sidebar > p:first-child {
-        font-size: 20px;
-        font-weight: bolder;
-        margin-top: 20px;
-        margin-bottom: 0px;
-        margin-left: 20px;
-        margin-right: 20px;
-        color: #dddbd4;
-        padding: 5px;
-      }
-
-      /* Make the right-column list scrollable */
-      .right-column {
-        flex-grow: 1; /* Allow the list to grow and take available space */
-        overflow-y: auto; /* Add vertical scrollbar if needed */
-      }
-
-      /* Make the "Help Point" stay at the bottom */
-      .help-point {
-        margin-top: auto; /* Push the element to the bottom */
-        margin-left: 20px;
-        margin-right: 20px;
-        margin-bottom: 20px;
-        color: #dddbd4;
-        padding: 5px;
-      }
-
       .sidebar ul {
+        height: 80%;
+        margin-top: 10%;
+        margin-bottom: 10%;
         padding: 0;
         list-style: none;
+        transform: translate(0%, 10%);
       }
 
       .sidebar ul li {
         padding: 10px;
+		font-size: 20px;
+      }
+
+      /* Make the right-column list scrollable */
+      .right-column {
+        position: relative;
+        height: 100%;
+        overflow-y: auto;
+        flex: content;
+        z-index: 2;
+      }
+
+      .top-container {
+        position: relative;
+        height: 100px;
+        background-image: linear-gradient(
+          0deg,
+          hsla(0, 0%, 100%, 0) -0%,
+          #4e4e4e 20%
+        );
+        z-index: 3;
+        display: flex;
+        align-items: flex-start;
+        font-size: 25px;
+        font-weight: bolder;
+        color: #dddbd4;
+        align-content: space-around;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .bottom-container {
+        position: relative;
+        height: 35px;
+        background-image: linear-gradient(
+          180deg,
+          hsla(0, 0%, 100%, 0) -0%,
+          #4e4e4e 25%
+        );
+        z-index: 3;
+        display: flex;
+        align-items: flex-end;
+        font-size: 15px;
+        color: #dddbd4;
+        align-content: space-around;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .top-container p,
+      .bottom-container p {
+        margin: 0 auto;
       }
 
       /* Page Content styles */
@@ -104,7 +129,6 @@
         padding: 10px;
         position: relative;
         z-index: 1; /* Ensure the header is above the map */
-        font-family: "Cabin", sans-serif;
       }
 
       .header button {
@@ -124,30 +148,13 @@
         border-radius: 5px;
         margin-right: 5px;
         box-sizing: border-box;
+        font-size: 30px;
+        font-family: "Cabin", sans-serif;
       }
 
       .main-content {
         padding: 20px;
       }
-
-      /* Lists
-      .lists {
-        display: flex;
-      }
-
-      .list {
-        flex: 1;
-        padding: 20px;
-      }
-
-      .list ul {
-        list-style: none;
-        padding: 0;
-      }
-
-      .list ul li {
-        margin-bottom: 10px;
-      } */
 
       #map {
         position: absolute;
@@ -196,12 +203,18 @@
   <body>
     <!-- Sidebar -->
     <div class="sidebar" id="mySidebar">
-      <p>
-        <b>Successful Guesses: </b>
-        <span id="guessCount">0</span>/<span id="totalStationsCount"></span>
-      </p>
-      <ul class="right-column" id="correctGuessesList"></ul>
-      <p class="help-point">Help Point</p>
+      <div class="right-column">
+        <ul id="correctGuessesList"></ul>
+      </div>
+      <div class="top-container">
+        <p>
+          Successful Guesses:
+          <span id="guessCount">0</span>/<span id="totalStationsCount"></span>
+        </p>
+      </div>
+      <div class="bottom-container">
+        <p>Help Point</p>
+      </div>
     </div>
 
     <!-- Page Content -->
@@ -260,6 +273,10 @@
           const itemName = blob.properties.name.toLowerCase();
 
           if (roughlyEqual(itemName, guessInput)) {
+            var id = correctGuessesList.length;
+            blob.id = id;
+            blob.properties.guessed = 1;
+
             // Move the blob to the new list
             correctGuessesList.push(blob);
 
@@ -272,7 +289,7 @@
             guessCount.textContent = correctGuessesList.length;
 
             // Update the points data with the new guess
-            map.getSource("points").setData({
+            map.getSource("pointsLocations").setData({
               type: "FeatureCollection",
               features: correctGuessesList,
             });
@@ -281,6 +298,37 @@
             document.getElementById("correctGuessesList").innerHTML = "";
             for (const blob of stationsInfo) {
               const listItem = document.createElement("li");
+              listItem.textContent = blob.properties.name;
+              listItem.addEventListener("mouseover", function () {
+                const text = listItem.textContent;
+
+                const features = map.querySourceFeatures("pointsLocations");
+
+                const targetFeature = features.find(function (feature) {
+                  return feature.properties.name === text;
+                });
+
+                map.setFeatureState(
+                  { source: "pointsLocations", id: targetFeature.id },
+                  { hover: true }
+                );
+              });
+
+              listItem.addEventListener("mouseout", function () {
+                const text = listItem.textContent;
+
+                const features = map.querySourceFeatures("pointsLocations");
+
+                const targetFeature = features.find(function (feature) {
+                  return feature.properties.name === text;
+                });
+
+                map.setFeatureState(
+                  { source: "pointsLocations", id: targetFeature.id },
+                  { hover: false }
+                );
+              });
+
               listItem.textContent = blob.properties.name;
               if (correctGuessesList.includes(blob)) {
                 document
@@ -314,8 +362,20 @@
       document.getElementById("totalStationsCount").textContent =
         stationsInfo.length;
 
+      const rightColumnHeight =
+        document.querySelector(".right-column").clientHeight;
+      const topContainer = document.querySelector(".top-container");
+      const bottomContainer = document.querySelector(".bottom-container");
+
+      topContainer.style.top = `-${rightColumnHeight}px`;
+      bottomContainer.style.top = `-${
+        topContainer.clientHeight + bottomContainer.clientHeight
+      }px`;
+
+      let hoveredPolygonId = null;
+
       map.on("load", () => {
-        map.addSource("points", {
+        map.addSource("pointsLocations", {
           type: "geojson",
           data: {
             type: "FeatureCollection",
@@ -324,34 +384,77 @@
         });
 
         // Add an image to use as a custom marker
-        map.loadImage(
-          "https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png",
-          (error, image) => {
-            if (error) throw error;
-            map.addImage("custom-marker", image);
+        map.loadImage("assets/underground_no-text.png", (error, image) => {
+          if (error) throw error;
+          map.addImage("roundel", image);
 
-            // Add a symbol layer
-            map.addLayer({
-              id: "points",
-              type: "symbol",
-              source: "points",
-              layout: {
-                "icon-image": "custom-marker",
-                "icon-size": 0.75,
-                // get the station name from the source's 'name' property
-                "text-anchor": "top",
-                "text-field": ["get", "name"],
-                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-                "text-offset": [0, 1.25],
-                "text-optional": true,
-                "text-size": 10,
-              },
-              paint: {
-                "text-color": "#FFFFFF",
-              },
-            });
+          // Add a symbol layer
+          map.addLayer({
+            id: "points",
+            type: "symbol",
+            source: "pointsLocations",
+            layout: {
+              "icon-image": "roundel",
+              "icon-size": 0.05,
+              // get the station name from the source's 'name' property
+              "text-anchor": "top",
+              "text-field": ["get", "name"],
+              "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+              "text-offset": [0, 1],
+              "text-optional": true,
+              "text-size": 15,
+            },
+            paint: {
+              "text-color": [
+                "case",
+                ["boolean", ["feature-state", "hover"], false],
+                "#000",
+                "#FFF",
+              ],
+              "text-halo-color": "#FFF",
+              "text-halo-blur": [
+                "case",
+                ["boolean", ["feature-state", "hover"], false],
+                1,
+                0,
+              ],
+              "text-halo-width": [
+                "case",
+                ["boolean", ["feature-state", "hover"], false],
+                2,
+                0,
+              ],
+            },
+          });
+        });
+
+        map.on("mousemove", "points", (e) => {
+          if (e.features.length > 0) {
+            if (hoveredPolygonId !== null) {
+              map.setFeatureState(
+                { source: "pointsLocations", id: hoveredPolygonId },
+                { hover: false }
+              );
+            }
+            hoveredPolygonId = e.features[0].id;
+            map.setFeatureState(
+              { source: "pointsLocations", id: hoveredPolygonId },
+              { hover: true }
+            );
           }
-        );
+        });
+
+        // When the mouse leaves the state-fill layer, update the feature state of the
+        // previously hovered feature.
+        map.on("mouseleave", "points", () => {
+          if (hoveredPolygonId !== null) {
+            map.setFeatureState(
+              { source: "pointsLocations", id: hoveredPolygonId },
+              { hover: false }
+            );
+          }
+          hoveredPolygonId = null;
+        });
       });
 
       map.on("idle", () => {
