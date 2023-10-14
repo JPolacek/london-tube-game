@@ -60,7 +60,7 @@
 
       .sidebar ul li {
         padding: 10px;
-		font-size: 20px;
+        font-size: 20px;
       }
 
       /* Make the right-column list scrollable */
@@ -110,8 +110,19 @@
       }
 
       .top-container p,
-      .bottom-container p {
+      .bottom-container button {
         margin: 0 auto;
+      }
+
+      .bottom-container button {
+        background-color: transparent;
+        border: 0px; /* Set the border properties to create the button outline */
+        color: #dddbd4; /* Set the text color */
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        cursor: pointer;
+        font-family: "Cabin", sans-serif;
       }
 
       /* Page Content styles */
@@ -208,12 +219,12 @@
       </div>
       <div class="top-container">
         <p>
-          Successful Guesses:
+          Guessed Stations:
           <span id="guessCount">0</span>/<span id="totalStationsCount"></span>
         </p>
       </div>
       <div class="bottom-container">
-        <p>Help Point</p>
+        <button>Help Point</button>
       </div>
     </div>
 
@@ -249,17 +260,6 @@
           .toLowerCase();
       }
 
-      function roughlyEqual(itemName, searchInput) {
-        const adjustedSearchInput = adjust(searchInput);
-
-        return (
-          adjust(itemName) === adjustedSearchInput &&
-          !correctGuessesList.some(
-            (item) => adjust(item.properties.name) === adjustedSearchInput
-          )
-        );
-      }
-
       // Function to move JSON blobs based on user input (case-insensitive, unique)
       function moveBlobs() {
         // Get the user's input from the text box and convert to lowercase
@@ -272,68 +272,100 @@
           // Convert the name to lowercase for case-insensitive comparison
           const itemName = blob.properties.name.toLowerCase();
 
-          if (roughlyEqual(itemName, guessInput)) {
-            var id = correctGuessesList.length;
-            blob.id = id;
-            blob.properties.guessed = 1;
+          const adjustedGuessInput = adjust(guessInput);
 
-            // Move the blob to the new list
-            correctGuessesList.push(blob);
+          if (adjust(itemName) === adjustedGuessInput) {
+            // We want to clear the input regardless, but we don't always want to add an element
+            // TODO: add some logic so we can guess stations that where one station name is a substring of another
+            // i.e. so we can guess paddington and paddington H&C line
+            // document.getElementById("guessInput").value = "";
 
-            // Clear the text field
-            const textField = document.getElementById("guessInput");
-            textField.value = "";
-
-            // Update the guess count and display it
-            const guessCount = document.getElementById("guessCount");
-            guessCount.textContent = correctGuessesList.length;
-
-            // Update the points data with the new guess
-            map.getSource("pointsLocations").setData({
-              type: "FeatureCollection",
-              features: correctGuessesList,
+            // focus on the station that was just guessed
+            map.easeTo({
+              center: blob.geometry.coordinates,
+              zoom: 13,
+              speed: 0.2,
+              duration: 3000,
             });
 
-            // Display the updated list of correct guesses
-            document.getElementById("correctGuessesList").innerHTML = "";
-            for (const blob of stationsInfo) {
-              const listItem = document.createElement("li");
-              listItem.textContent = blob.properties.name;
-              listItem.addEventListener("mouseover", function () {
-                const text = listItem.textContent;
+            if (
+              !correctGuessesList.some(
+                (item) => adjust(item.properties.name) === adjustedGuessInput
+              )
+            ) {
+              // Set the unique ID for the correct guess
+              blob.id = correctGuessesList.length;
+              blob.properties.guessed = 1;
 
-                const features = map.querySourceFeatures("pointsLocations");
+              // Move the blob to the new list
+              correctGuessesList.push(blob);
 
-                const targetFeature = features.find(function (feature) {
-                  return feature.properties.name === text;
-                });
+              // Clear the text field
+              document.getElementById("guessInput").value = "";
 
-                map.setFeatureState(
-                  { source: "pointsLocations", id: targetFeature.id },
-                  { hover: true }
-                );
+              // Update the guess count and display it
+              document.getElementById("guessCount").textContent =
+                correctGuessesList.length;
+
+              // Update the points data with the new guess
+              map.getSource("pointsLocations").setData({
+                type: "FeatureCollection",
+                features: correctGuessesList,
               });
 
-              listItem.addEventListener("mouseout", function () {
-                const text = listItem.textContent;
+              // Display the updated list of correct guesses
+              document.getElementById("correctGuessesList").innerHTML = "";
+              for (const blob of stationsInfo) {
+                const listItem = document.createElement("li");
+                listItem.textContent = blob.properties.name;
 
-                const features = map.querySourceFeatures("pointsLocations");
+                if (correctGuessesList.includes(blob)) {
+                  // Event listener -- clicking moves camera to the corresponding station
+                  listItem.addEventListener("click", function () {
+                    map.easeTo({
+                      center: correctGuessesList.find(function (station) {
+                        return station.properties.name === listItem.textContent;
+                      }).geometry.coordinates,
+                      zoom: 13,
+                      speed: 0.2,
+                      duration: 3000,
+                    });
+                  });
 
-                const targetFeature = features.find(function (feature) {
-                  return feature.properties.name === text;
-                });
+                  // Event listener -- hovering highlights the corresponding station
+                  listItem.addEventListener("mouseover", function () {
+                    map.setFeatureState(
+                      {
+                        source: "pointsLocations",
+                        id: correctGuessesList.find(function (station) {
+                          return (
+                            station.properties.name === listItem.textContent
+                          );
+                        }).id,
+                      },
+                      { hover: true }
+                    );
+                  });
 
-                map.setFeatureState(
-                  { source: "pointsLocations", id: targetFeature.id },
-                  { hover: false }
-                );
-              });
+                  // Event listener -- unhovering unhighlights the corresponding station
+                  listItem.addEventListener("mouseout", function () {
+                    map.setFeatureState(
+                      {
+                        source: "pointsLocations",
+                        id: correctGuessesList.find(function (station) {
+                          return (
+                            station.properties.name === listItem.textContent
+                          );
+                        }).id,
+                      },
+                      { hover: false }
+                    );
+                  });
 
-              listItem.textContent = blob.properties.name;
-              if (correctGuessesList.includes(blob)) {
-                document
-                  .getElementById("correctGuessesList")
-                  .appendChild(listItem);
+                  document
+                    .getElementById("correctGuessesList")
+                    .appendChild(listItem);
+                }
               }
             }
           }
@@ -345,8 +377,8 @@
         container: "map", // container ID
         // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
         style: "mapbox://styles/" + STYLE_URI, // style URL, darkmode
-        center: [-0.1304, 51.5164], // starting position [lng, lat]
-        zoom: 12, // starting zoom
+        center: [-0.12574, 51.50853], // starting position [lng, lat]
+        zoom: 10, // starting zoom
       });
 
       const sidebarButton = document.getElementById("sidebarButtonId");

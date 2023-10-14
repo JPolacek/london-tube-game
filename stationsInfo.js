@@ -1391,7 +1391,7 @@ export const stationsInfo = [
 		"properties": {
 			"highlighted": false,
 			"guessed": 0,
-			"name": "Paddington (H&C Line)-Underground"
+			"name": "Paddington (H&C Line)"
 		}
 	},
 	{
