@@ -49,27 +49,29 @@
         right: 0;
       }
 
-      .sidebar ul {
+      /* Make the right-column list scrollable */
+      .right-column {
+        position: sticky;
+        height: calc(100% - 25px); /* Calculate the maximum height */
+        overflow-y: auto;
+        z-index: 2;
+        padding: 0; /* Remove the padding */
+        list-style: none;
+      }
+
+      .right-column ul {
         height: 80%;
-        margin-top: 10%;
-        margin-bottom: 10%;
+        margin-top: 5%;
+        margin-bottom: 15%;
         padding: 0;
         list-style: none;
         transform: translate(0%, 10%);
       }
 
-      .sidebar ul li {
+      .right-column li {
         padding: 10px;
         font-size: 20px;
-      }
-
-      /* Make the right-column list scrollable */
-      .right-column {
-        position: relative;
-        height: 100%;
-        overflow-y: auto;
-        flex: content;
-        z-index: 2;
+        transition: background-color 1s, color 1s;
       }
 
       .top-container {
@@ -107,6 +109,7 @@
         align-content: space-around;
         flex-direction: column;
         justify-content: center;
+        padding: 0px;
       }
 
       .top-container p,
@@ -247,10 +250,12 @@
 
     <script type="module">
       import { ACCESS_TOKEN, STYLE_URI } from "./consts.js";
-      import { stationsInfo } from "./stationsInfo.js";
+      import { allStations, stationsByLine } from "./stationsInfo.js";
+      import { coordinates } from "./coordinates.js";
 
-      // Empty list to store moved JSON blobs
+      // Lists to store correctly guessed stations and remaining stations
       let correctGuessesList = [];
+      let remainingStationsList = [...allStations];
 
       function adjust(s) {
         return s
@@ -258,6 +263,10 @@
           .replace("saint", "st")
           .replace(/\band\b/g, "\&")
           .toLowerCase();
+      }
+
+      function layerName(s) {
+        return s.toLowerCase().replace(/\s/g, "-").replace("\&", "and");
       }
 
       // Function to move JSON blobs based on user input (case-insensitive, unique)
@@ -268,18 +277,15 @@
           .value.toLowerCase();
 
         // Iterate through the original list
-        for (const blob of stationsInfo) {
+        for (const blob of allStations) {
           // Convert the name to lowercase for case-insensitive comparison
           const itemName = blob.properties.name.toLowerCase();
 
           const adjustedGuessInput = adjust(guessInput);
 
-          if (adjust(itemName) === adjustedGuessInput) {
-            // We want to clear the input regardless, but we don't always want to add an element
-            // TODO: add some logic so we can guess stations that where one station name is a substring of another
-            // i.e. so we can guess paddington and paddington H&C line
-            // document.getElementById("guessInput").value = "";
+          // If there is a station with the same name in stationsInfo, and the station is still in the remaining stations list, add the blob to the correct guesses and remove it from remaining stations
 
+          if (adjust(itemName) === adjustedGuessInput) {
             // focus on the station that was just guessed
             map.easeTo({
               center: blob.geometry.coordinates,
@@ -289,7 +295,7 @@
             });
 
             if (
-              !correctGuessesList.some(
+              remainingStationsList.some(
                 (item) => adjust(item.properties.name) === adjustedGuessInput
               )
             ) {
@@ -299,6 +305,53 @@
 
               // Move the blob to the new list
               correctGuessesList.push(blob);
+              remainingStationsList = remainingStationsList.filter(
+                (item) => adjust(item.properties.name) !== adjustedGuessInput
+              );
+              for (const line of stationsByLine) {
+                // Only remove the line and maybe draw if the line isn't drawn
+                if (line.not_guessed.length != 0) {
+                  line.not_guessed = line.not_guessed.filter(
+                    (stationName) => adjust(stationName) !== adjustedGuessInput
+                  );
+                  line.guessed.push(blob);
+
+                  if (line.not_guessed.length == 0) {
+                    console.log(`${line.name} has been fully guessed`);
+                    const lineCoordinates = coordinates.find(function (item) {
+                      return item.name === line.name;
+                    });
+
+                    if (lineCoordinates) {
+                      console.log(`${line.name} can be drawn`);
+
+                      map.addSource(layerName(lineCoordinates.name), {
+                        type: "geojson",
+                        data: {
+                          type: "FeatureCollection",
+                          features: lineCoordinates.features,
+                        },
+                      });
+
+                      map.addLayer({
+                        id: layerName(lineCoordinates.name),
+                        type: "line",
+                        source: layerName(lineCoordinates.name),
+                        layout: {
+                          "line-join": "round",
+                          "line-cap": "round",
+                        },
+                        paint: {
+                          "line-color": lineCoordinates.lineColor,
+                          "line-width": 4,
+                        },
+                      });
+
+                      map.moveLayer(layerName(lineCoordinates.name), "points");
+                    }
+                  }
+                }
+              }
 
               // Clear the text field
               document.getElementById("guessInput").value = "";
@@ -315,7 +368,7 @@
 
               // Display the updated list of correct guesses
               document.getElementById("correctGuessesList").innerHTML = "";
-              for (const blob of stationsInfo) {
+              for (const blob of allStations) {
                 const listItem = document.createElement("li");
                 listItem.textContent = blob.properties.name;
 
@@ -326,7 +379,7 @@
                       center: correctGuessesList.find(function (station) {
                         return station.properties.name === listItem.textContent;
                       }).geometry.coordinates,
-                      zoom: 13,
+                      zoom: 17,
                       speed: 0.2,
                       duration: 3000,
                     });
@@ -367,6 +420,33 @@
                     .appendChild(listItem);
                 }
               }
+            } else if (
+              correctGuessesList.some(
+                (item) => adjust(item.properties.name) === adjustedGuessInput
+              )
+            ) {
+              console.log("already guessed");
+              const guessedStationLi = Array.from(
+                document
+                  .getElementById("correctGuessesList")
+                  .getElementsByTagName("li")
+              ).find((li) => li.textContent === blob.properties.name);
+
+              const scrollable = document.querySelector(".right-column");
+              // Calculate the scroll position
+              const scrollTop =
+                guessedStationLi.offsetTop - scrollable.offsetTop;
+
+              // Scroll the container to the matching item
+              scrollable.scrollTop = scrollTop;
+
+              // Highlight the item and fade back out
+              guessedStationLi.style.backgroundColor = "#828282";
+              setTimeout(() => {
+                guessedStationLi.style.backgroundColor = "";
+              }, 1000);
+            } else {
+              console.log("something weird's happened");
             }
           }
         }
@@ -392,7 +472,7 @@
       });
 
       document.getElementById("totalStationsCount").textContent =
-        stationsInfo.length;
+        allStations.length;
 
       const rightColumnHeight =
         document.querySelector(".right-column").clientHeight;
@@ -401,7 +481,7 @@
 
       topContainer.style.top = `-${rightColumnHeight}px`;
       bottomContainer.style.top = `-${
-        topContainer.clientHeight + bottomContainer.clientHeight
+        topContainer.clientHeight + bottomContainer.clientHeight - 25
       }px`;
 
       let hoveredPolygonId = null;
@@ -428,7 +508,6 @@
             layout: {
               "icon-image": "roundel",
               "icon-size": 0.05,
-              // get the station name from the source's 'name' property
               "text-anchor": "top",
               "text-field": ["get", "name"],
               "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
@@ -460,6 +539,8 @@
           });
         });
 
+        // When the mouse moves over a correctly guessed station on the map, highlight it
+        // TODO: Consider highlighting it on the sidebar too
         map.on("mousemove", "points", (e) => {
           if (e.features.length > 0) {
             if (hoveredPolygonId !== null) {
@@ -487,6 +568,21 @@
           }
           hoveredPolygonId = null;
         });
+
+        // When the mouse clicks on a correctly guessed station on the map, center it and zoom in
+        // TODO: Consider highlighting it on the sidebar (but moving over would probably cover that)
+        map.on("click", "points", (e) => {
+          if (e.features.length > 0) {
+            map.easeTo({
+              center: correctGuessesList.find(function (station) {
+                return station.properties.name === e.features[0].properties.name;
+              }).geometry.coordinates,
+              zoom: 17,
+              speed: 0.2,
+              duration: 3000,
+            });
+          }
+        });
       });
 
       map.on("idle", () => {
@@ -495,11 +591,17 @@
           // Get the current input value
           let inputText = this.value;
 
-          // Replace consecutive spaces with a single space
-          inputText = inputText.replace(/\s+/g, " ");
+          // Ensure that the input does not start with a space
+          if (inputText[0] !== " ") {
+            // Replace consecutive spaces with a single space
+            inputText = inputText.replace(/\s+/g, " ");
 
-          // Update the input value with the cleaned text
-          this.value = inputText;
+            // Update the input value with the cleaned text
+            this.value = inputText;
+          } else {
+            // The first character is a space, remove it
+            this.value = inputText.substring(1);
+          }
 
           moveBlobs();
         });
