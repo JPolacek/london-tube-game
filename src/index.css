@@ -1,0 +1,190 @@
+body {
+  margin: 0;
+  font-family: "Cabin", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Sidebar styles */
+.sidebar {
+  position: fixed;
+  z-index: 2;
+  top: 0;
+  right: -250px;
+  width: 250px;
+  height: 100%;
+  background-color: #4e4e4e;
+  color: #fff;
+  transition: right 0.3s;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.75);
+  text-align: center;
+}
+
+.sidebar.open {
+  right: 0;
+}
+
+/* Make the right-column list scrollable */
+.right-column {
+  position: sticky;
+  height: calc(100% - 25px); /* Calculate the maximum height */
+  /* overflow-y: auto; */
+  z-index: 2;
+  padding: 0; /* Remove the padding */
+  list-style: none;
+}
+
+.right-column ul {
+  height: 90%;
+  margin-top: 0%;
+  margin-bottom: 0%;
+  padding: 0;
+  list-style: none;
+  overflow: -moz-scrollbars-vertical; 
+  overflow-y: scroll;
+  /* transform: translate(0%, 10%); */
+}
+
+.right-column li {
+  padding: 10px;
+  font-size: 20px;
+  transition: background-color 1s, color 1s;
+}
+
+.top-container {
+  position: relative;
+  height: 100px;
+  background-image: linear-gradient(
+    0deg,
+    hsla(0, 0%, 100%, 0) -0%,
+    #4e4e4e 20%
+  );
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  font-size: 25px;
+  font-weight: bolder;
+  color: #dddbd4;
+  align-content: space-around;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.bottom-container {
+  position: relative;
+  height: 35px;
+  background-image: linear-gradient(
+    180deg,
+    hsla(0, 0%, 100%, 0) -0%,
+    #4e4e4e 25%
+  );
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  font-size: 15px;
+  color: #dddbd4;
+  align-content: space-around;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0px;
+}
+
+.top-container p,
+.bottom-container button {
+  margin: 0 auto;
+}
+
+.bottom-container button {
+  background-color: transparent;
+  border: 0px; /* Set the border properties to create the button outline */
+  color: #dddbd4; /* Set the text color */
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  font-family: "Cabin", sans-serif;
+}
+
+/* Page Content styles */
+.page-content {
+  margin-right: 0;
+  transition: margin-right 0.4s;
+}
+
+.header {
+  display: flex;
+  flex-direction: row; /* Change flex-direction to row */
+  align-items: center; /* Vertically center the content */
+  background-color: #4e4e4e;
+  color: #fff;
+  padding: 10px;
+  position: relative;
+  z-index: 1; /* Ensure the header is above the map */
+}
+
+.header button {
+  background-color: transparent;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  margin-right: 10px; /* Add some spacing to the right of the button */
+  cursor: pointer;
+  padding: 5px;
+}
+
+.header input {
+  flex: 1; /* Make the input expand and take up remaining horizontal space */
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  margin-right: 5px;
+  box-sizing: border-box;
+  font-size: 30px;
+  font-family: 'Cabin', sans-serif
+}
+
+.main-content {
+  padding: 20px;
+}
+
+.map-container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: 0;
+}
+
+.message-box {
+  position: fixed;
+  bottom: 25px;
+  right: 5px;
+  display: flex;
+  align-items: center;
+  color: #fff;
+  border-radius: 4px;
+  padding: 8px;
+  cursor: pointer;
+  transition: opacity 0.7s ease-in-out;
+  background-color: rgb(78, 78, 78, 0.25);
+  opacity: 0.25; /* Set initial opacity */
+}
+
+.message-icon {
+  font-size: 20px;
+  /* opacity: 25%; */
+}
+
+.message-content {
+  display: none;
+}
+
+.message-box:hover {
+  background-color: rgb(78, 78, 78, 1);
+  opacity: 1; /* Set initial opacity */
+  transition: opacity 0.7s ease-in-out; /* Apply transition to width, height, and opacity */
+}
+
+.message-box:hover .message-content {
+  margin-left: 5px;
+  display: block;
+}

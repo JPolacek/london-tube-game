@@ -4,7 +4,7 @@ These sites are helpful:
 * https://docs.mapbox.com/mapbox-gl-js/api/
 
 How to test locally:
-* create a consts.js file that exports your mapbox access token and the URI to your preferred map style, and a secrets.txt that contains your TfL app key (if you plan on running the TfL Client script)
+* create an .env file that contains your mapbox access token and the URI to your preferred map style with the appropriate environment react app variable name
 * Navigate to london-tube-game directory
-* Run `http-server`
-* Follow the url that you're given in order to access html files
+* Run `npm start`
+* Play around at localhost:3000
